@@ -9,6 +9,8 @@ import ConditionSetup from './pages/ConditionSetup';
 import AlertHistory from './pages/AlertHistory';
 import './App.css';
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
 // Simple PrivateRoute wrapper block
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -25,7 +27,7 @@ const OAuthCallback = () => {
     if (token) {
       localStorage.setItem('token', token);
       // Fetch user info with the new token
-      fetch('/api/auth/me', {
+      fetch(`${API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(res => res.json())
