@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Trash2, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import api from '../services/api';
-import emptyWatchlistImage from '../assets/empty_watchlist_1776524281664.png';
 
 const Watchlist = () => {
   const [watchlist, setWatchlist] = useState([]);
@@ -17,16 +16,17 @@ const Watchlist = () => {
   const fetchWatchlist = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/watchlist');
-      setWatchlist(response.data);
+      const response = await api.get('/stocks/watchlist/prices');
+      // Backend returns array of price objects; if empty, fetch just watchlist entries
+      if (response.data && response.data.length > 0) {
+        setWatchlist(response.data);
+      } else {
+        // No prices yet, try raw watchlist
+        setWatchlist([]);
+      }
     } catch (err) {
-      console.warn('API error, loading mock watchlist.');
-      // Mock data for UI demonstration
-      setWatchlist([
-        { id: 1, symbol: 'AAPL', name: 'Apple Inc.', price: 173.50, change: 1.25, isNasdaq: true },
-        { id: 2, symbol: 'RELIANCE', name: 'Reliance Industries', price: 2950.40, change: -0.85, isNasdaq: false },
-        { id: 3, symbol: 'NVDA', name: 'NVIDIA Corp.', price: 890.10, change: 3.45, isNasdaq: true },
-      ]);
+      console.error('Error fetching watchlist:', err);
+      setWatchlist([]);
     } finally {
       setLoading(false);
     }
@@ -38,34 +38,29 @@ const Watchlist = () => {
 
     setAdding(true);
     try {
-      const response = await api.post('/watchlist', { symbol: searchQuery.toUpperCase() });
+      const response = await api.post('/stocks/watchlist', {
+        symbol: searchQuery.toUpperCase(),
+        companyName: searchQuery.toUpperCase(),
+      });
       if (response.data) {
-        setWatchlist([...watchlist, response.data]);
+        // Re-fetch to get updated prices
+        await fetchWatchlist();
       }
     } catch (err) {
-      console.warn('API error during add, using mock update.');
-      const mockNewStock = {
-        id: Date.now(),
-        symbol: searchQuery.toUpperCase(),
-        name: searchQuery.toUpperCase() + ' (Mock)',
-        price: (Math.random() * 500).toFixed(2),
-        change: (Math.random() * 5 - 2.5).toFixed(2),
-        isNasdaq: Math.random() > 0.5
-      };
-      setWatchlist([...watchlist, mockNewStock]);
+      const msg = err.response?.data?.message || 'Failed to add stock';
+      alert(msg);
     } finally {
       setSearchQuery('');
       setAdding(false);
     }
   };
 
-  const handleRemoveStock = async (id) => {
+  const handleRemoveStock = async (symbol) => {
     try {
-      await api.delete(`/watchlist/${id}`);
-      setWatchlist(watchlist.filter(stock => stock.id !== id));
+      await api.delete(`/stocks/watchlist/${symbol}`);
+      setWatchlist(watchlist.filter(stock => stock.symbol !== symbol));
     } catch (err) {
-      console.warn('API error during delete, using mock update.');
-      setWatchlist(watchlist.filter(stock => stock.id !== id));
+      console.error('Error removing stock:', err);
     }
   };
 
@@ -104,7 +99,6 @@ const Watchlist = () => {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 2rem', background: 'rgba(255,255,255,0.4)', borderRadius: 'var(--radius-xl)', border: '1px dashed var(--color-border)' }}
         >
-          <img src={emptyWatchlistImage} alt="Empty Watchlist" style={{ width: '250px', marginBottom: '2rem', filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.1))' }} />
           <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Your watchlist is empty</h3>
           <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', maxWidth: '400px' }}>
             Start building your portfolio by searching for NSE or NASDAQ stock symbols above.
@@ -115,7 +109,7 @@ const Watchlist = () => {
           <AnimatePresence>
             {watchlist.map(stock => (
               <motion.div
-                key={stock.id}
+                key={stock.symbol || stock._id}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -127,14 +121,11 @@ const Watchlist = () => {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{stock.symbol}</h3>
-                      <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'var(--color-border)', color: 'var(--color-text-muted)', fontWeight: 600 }}>
-                        {stock.isNasdaq ? 'NASDAQ' : 'NSE'}
-                      </span>
                     </div>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{stock.name}</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{stock.companyName || stock.symbol}</span>
                   </div>
                   <button 
-                    onClick={() => handleRemoveStock(stock.id)}
+                    onClick={() => handleRemoveStock(stock.symbol)}
                     style={{ color: 'var(--color-text-light)', padding: '0.4rem', borderRadius: 'var(--radius-md)' }}
                     onMouseOver={(e) => { e.currentTarget.style.color = 'var(--color-sell)'; e.currentTarget.style.background = 'var(--color-sell-bg)' }}
                     onMouseOut={(e) => { e.currentTarget.style.color = 'var(--color-text-light)'; e.currentTarget.style.background = 'none' }}
@@ -145,17 +136,19 @@ const Watchlist = () => {
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '1.5rem' }}>
                   <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>
-                    {stock.isNasdaq ? '$' : '₹'}{stock.price}
+                    {stock.price != null ? `$${stock.price}` : '—'}
                   </div>
-                  <div style={{ 
-                    display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600,
-                    color: stock.change >= 0 ? 'var(--color-buy)' : 'var(--color-sell)',
-                    background: stock.change >= 0 ? 'var(--color-buy-bg)' : 'var(--color-sell-bg)',
-                    padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-md)'
-                  }}>
-                    {stock.change >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                    {stock.change > 0 ? '+' : ''}{stock.change}%
-                  </div>
+                  {stock.change != null && (
+                    <div style={{ 
+                      display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600,
+                      color: stock.change >= 0 ? 'var(--color-buy)' : 'var(--color-sell)',
+                      background: stock.change >= 0 ? 'var(--color-buy-bg)' : 'var(--color-sell-bg)',
+                      padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-md)'
+                    }}>
+                      {stock.change >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                      {stock.change > 0 ? '+' : ''}{stock.change}%
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}

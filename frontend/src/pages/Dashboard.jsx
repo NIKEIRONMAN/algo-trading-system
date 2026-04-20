@@ -1,51 +1,29 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, AlertCircle, Activity, Brain } from 'lucide-react';
+import { TrendingUp, AlertCircle, Activity, Brain, Target } from 'lucide-react';
 import api from '../services/api';
 
-const mockChartData = [
-  { time: '09:30', price: 150 },
-  { time: '10:00', price: 152 },
-  { time: '10:30', price: 148 },
-  { time: '11:00', price: 155 },
-  { time: '11:30', price: 158 },
-  { time: '12:00', price: 154 },
-  { time: '12:30', price: 159 },
-  { time: '13:00', price: 162 },
-  { time: '13:30', price: 160 },
-  { time: '14:00', price: 165 },
-  { time: '14:30', price: 168 },
-  { time: '15:00', price: 167 },
-  { time: '15:30', price: 172 },
-  { time: '16:00', price: 175 },
-];
-
-const mockDecisions = [
-  { id: 1, stock: 'AAPL', action: 'BUY', reason: 'Strong upward momentum detected with RSI indicating oversold conditions.', confidence: 92, time: '10 mins ago' },
-  { id: 2, stock: 'TSLA', action: 'SELL', reason: 'Resistance level breached, sentiment analysis shows negative trends.', confidence: 85, time: '1 hour ago' },
-  { id: 3, stock: 'MSFT', action: 'HOLD', reason: 'Market consolidation phase. Waiting for clearer breakout signals.', confidence: 78, time: '3 hours ago' },
-];
-
 const Dashboard = () => {
-  const [stats, setStats] = useState({ activeStocks: 12, totalAlerts: 34, profitPercentage: '+14.5%' });
-  const [decisions, setDecisions] = useState(mockDecisions);
-  const [chartData, setChartData] = useState(mockChartData);
+  const [stats, setStats] = useState({ activeStocks: 0, totalAlerts: 0, profitPercentage: '0%', activeConditions: 0 });
+  const [decisions, setDecisions] = useState([]);
+  const [conditions, setConditions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Attempt to fetch real data
-        const [statsRes, decisionsRes] = await Promise.all([
+        const [statsRes, alertsRes, conditionsRes] = await Promise.all([
           api.get('/dashboard/stats').catch(() => null),
-          api.get('/dashboard/ai-decisions').catch(() => null)
+          api.get('/dashboard/recent-alerts').catch(() => null),
+          api.get('/conditions').catch(() => null),
         ]);
 
         if (statsRes?.data) setStats(statsRes.data);
-        if (decisionsRes?.data) setDecisions(decisionsRes.data);
+        if (alertsRes?.data) setDecisions(alertsRes.data);
+        if (conditionsRes?.data) setConditions(conditionsRes.data.slice(0, 10));
       } catch (err) {
-        console.warn('Using mock data. Backend disconnected.');
+        console.error('Dashboard data fetch error:', err);
       } finally {
         setLoading(false);
       }
@@ -55,11 +33,24 @@ const Dashboard = () => {
   }, []);
 
   const getActionBadge = (action) => {
-    switch (action.toUpperCase()) {
+    switch (action?.toUpperCase()) {
       case 'BUY': return 'badge buy';
       case 'SELL': return 'badge sell';
       case 'HOLD': return 'badge hold';
+      case 'DROP': return 'badge sell';
+      case 'EXPIRED': return 'badge hold';
       default: return 'badge hold';
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status?.toUpperCase()) {
+      case 'PENDING': return { className: 'badge hold', label: 'Pending' };
+      case 'ACTIVE': return { className: 'badge buy', label: 'Active' };
+      case 'COMPLETED': return { className: 'badge buy', label: 'Completed' };
+      case 'EXPIRED': return { className: 'badge sell', label: 'Expired' };
+      case 'CANCELLED': return { className: 'badge hold', label: 'Cancelled' };
+      default: return { className: 'badge hold', label: status };
     }
   };
 
@@ -93,18 +84,18 @@ const Dashboard = () => {
             <Activity size={28} />
           </div>
           <div>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Active Stocks</p>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Watchlist Stocks</p>
             <h2 style={{ fontSize: '1.875rem' }}>{stats.activeStocks}</h2>
           </div>
         </motion.div>
 
         <motion.div variants={itemVariants} className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <div style={{ background: 'var(--color-buy-bg)', padding: '1rem', borderRadius: 'var(--radius-lg)', color: 'var(--color-buy)' }}>
-            <TrendingUp size={28} />
+            <Target size={28} />
           </div>
           <div>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Profit Overview</p>
-            <h2 style={{ fontSize: '1.875rem', color: 'var(--color-buy)' }}>{stats.profitPercentage}</h2>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Active Conditions</p>
+            <h2 style={{ fontSize: '1.875rem' }}>{stats.activeConditions || 0}</h2>
           </div>
         </motion.div>
 
@@ -119,33 +110,41 @@ const Dashboard = () => {
         </motion.div>
       </div>
 
-      {/* Chart and AI Section */}
+      {/* Conditions Table + AI Insights */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '1.5rem' }}>
         <motion.div variants={itemVariants} className="glass-card" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.25rem' }}>Portfolio Performance</h3>
-            <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Today</span>
+            <h3 style={{ fontSize: '1.25rem' }}>Recent Conditions</h3>
+            <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{conditions.length} total</span>
           </div>
-          <div style={{ width: '100%', height: '350px' }}>
-            <ResponsiveContainer>
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--color-text-muted)' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--color-text-muted)' }} dx={-10} domain={['dataMin - 5', 'dataMax + 5']} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: 'var(--radius-md)', border: 'none', boxShadow: 'var(--shadow-lg)' }}
-                  labelStyle={{ color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}
-                />
-                <Area type="monotone" dataKey="price" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorPrice)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          
+          {conditions.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--color-text-muted)' }}>
+              <Target size={48} style={{ marginBottom: '1rem', opacity: 0.3 }} />
+              <p>No conditions set yet. Go to Conditions to create one.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {conditions.map((cond) => {
+                const statusInfo = getStatusBadge(cond.status);
+                return (
+                  <div key={cond._id} style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '1rem', borderRadius: 'var(--radius-lg)', 
+                    background: 'rgba(255,255,255,0.5)', border: '1px solid var(--color-border)'
+                  }}>
+                    <div>
+                      <span style={{ fontWeight: 700, fontSize: '1.125rem' }}>{cond.symbol}</span>
+                      <span style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginLeft: '0.75rem' }}>
+                        Buy ≤ ${cond.buyPrice} · Target +{cond.targetProfitPercent}%
+                      </span>
+                    </div>
+                    <span className={statusInfo.className}>{statusInfo.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
 
         <motion.div variants={itemVariants} className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: '1.5rem' }}>
@@ -154,34 +153,41 @@ const Dashboard = () => {
             <h3 style={{ fontSize: '1.25rem' }}>AI Insights</h3>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, overflowY: 'auto' }}>
-            {decisions.map((decision) => (
-              <motion.div 
-                key={decision.id} 
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                whileHover={{ scale: 1.02 }}
-                style={{ 
-                  background: 'rgba(255,255,255,0.5)', 
-                  padding: '1rem', 
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1px solid var(--color-border)'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span style={{ fontWeight: 700, fontSize: '1.125rem' }}>{decision.stock}</span>
-                  <span className={getActionBadge(decision.action)}>{decision.action}</span>
-                </div>
-                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.75rem', lineHeight: 1.4 }}>
-                  {decision.reason}
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--color-text-light)' }}>
-                  <span>Confidence: <strong style={{ color: 'var(--color-text-main)' }}>{decision.confidence}%</strong></span>
-                  <span>{decision.time}</span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {decisions.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--color-text-muted)', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <Brain size={48} style={{ marginBottom: '1rem', opacity: 0.3 }} />
+              <p>No AI alerts yet. Set conditions and the AI will start monitoring.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, overflowY: 'auto' }}>
+              {decisions.map((decision) => (
+                <motion.div 
+                  key={decision.id} 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  whileHover={{ scale: 1.02 }}
+                  style={{ 
+                    background: 'rgba(255,255,255,0.5)', 
+                    padding: '1rem', 
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px solid var(--color-border)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 700, fontSize: '1.125rem' }}>{decision.stock}</span>
+                    <span className={getActionBadge(decision.action)}>{decision.action}</span>
+                  </div>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.75rem', lineHeight: 1.4 }}>
+                    {decision.reason}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--color-text-light)' }}>
+                    <span>Confidence: <strong style={{ color: 'var(--color-text-main)' }}>{Math.round(decision.confidence)}%</strong></span>
+                    <span>{decision.time}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </motion.div>

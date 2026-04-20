@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes');
 const stockRoutes = require('./routes/stockRoutes');
 const conditionRoutes = require('./routes/conditionRoutes');
 const alertRoutes = require('./routes/alertRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 // Cron job
 const { startPriceMonitor } = require('./jobs/priceMonitor');
@@ -41,6 +42,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/stocks', stockRoutes);
 app.use('/api/conditions', conditionRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Health check
 app.get('/', (req, res) => res.json({ message: 'Algo Trading Backend is running 🚀' }));

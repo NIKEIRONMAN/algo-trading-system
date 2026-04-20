@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -11,8 +12,44 @@ import './App.css';
 // Simple PrivateRoute wrapper block
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  // For dev purposes, if you want this bypassing auth, replace checks.
   return token ? children : <Navigate to="/login" replace />;
+};
+
+// Component to handle Google OAuth callback token from URL
+const OAuthCallback = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      localStorage.setItem('token', token);
+      // Fetch user info with the new token
+      fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.user?.name) {
+            localStorage.setItem('userName', data.user.name);
+          }
+          navigate('/dashboard', { replace: true });
+        })
+        .catch(() => {
+          // Even if /me fails, we have the token — proceed
+          localStorage.setItem('userName', 'Investor');
+          navigate('/dashboard', { replace: true });
+        });
+    } else {
+      navigate('/login', { replace: true });
+    }
+  }, [searchParams, navigate]);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--color-text-muted)' }}>
+      Signing you in...
+    </div>
+  );
 };
 
 function App() {
@@ -22,6 +59,9 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        
+        {/* Google OAuth callback — captures ?token= from URL */}
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
 
         {/* Protected Routes directly embedded into layout */}
         <Route

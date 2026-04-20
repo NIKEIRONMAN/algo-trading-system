@@ -28,20 +28,19 @@ const ConditionSetup = () => {
     setSuccess(false);
     
     try {
-      await api.post('/conditions', formData);
+      // Map frontend field names to backend expected fields
+      await api.post('/conditions', {
+        symbol: formData.stockSymbol,
+        buyPrice: parseFloat(formData.buyPrice),
+        targetProfitPercent: parseFloat(formData.targetProfit),
+        maxDays: parseInt(formData.maxDays),
+      });
       setSuccess(true);
       setFormData({ stockSymbol: '', buyPrice: '', targetProfit: '', maxDays: '' });
     } catch (err) {
-      console.warn('API error, simulating success for demo.');
-      // Simulate success for frontend demo
-      setTimeout(() => {
-        setSuccess(true);
-        setFormData({ stockSymbol: '', buyPrice: '', targetProfit: '', maxDays: '' });
-        setLoading(false);
-      }, 1000);
-      return;
+      setError(err.response?.data?.message || 'Failed to save condition. Please try again.');
     } finally {
-      if(!error) setLoading(false);
+      setLoading(false);
     }
   };
 
