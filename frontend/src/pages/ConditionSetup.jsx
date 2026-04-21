@@ -86,7 +86,6 @@ const ConditionSetup = () => {
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label>Maximum Buy Price</label>
                 <div style={{ position: 'relative' }}>
-                  <DollarSign size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-light)' }} />
                   <input 
                     type="number" 
                     name="buyPrice"
@@ -94,7 +93,7 @@ const ConditionSetup = () => {
                     placeholder="0.00" 
                     value={formData.buyPrice}
                     onChange={handleChange}
-                    style={{ width: '100%', paddingLeft: '2.25rem' }}
+                    style={{ width: '100%', padding: '0.5rem 0.75rem' }}
                   />
                 </div>
               </div>
