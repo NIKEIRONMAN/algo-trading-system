@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, AlertCircle, Activity, Brain, Target } from 'lucide-react';
 import api from '../services/api';
+import { formatPrice, getCurrencySymbol } from '../utils/currency';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({ activeStocks: 0, totalAlerts: 0, profitPercentage: '0%', activeConditions: 0 });
@@ -131,12 +132,12 @@ const Dashboard = () => {
                   <div key={cond._id} style={{ 
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '1rem', borderRadius: 'var(--radius-lg)', 
-                    background: 'rgba(255,255,255,0.5)', border: '1px solid var(--color-border)'
+                    background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)'
                   }}>
                     <div>
                       <span style={{ fontWeight: 700, fontSize: '1.125rem' }}>{cond.symbol}</span>
                       <span style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginLeft: '0.75rem' }}>
-                        Buy ≤ ${cond.buyPrice} · Target +{cond.targetProfitPercent}%
+                        Buy ≤ {formatPrice(cond.buyPrice, cond.symbol)} · Target +{cond.targetProfitPercent}%
                       </span>
                     </div>
                     <span className={statusInfo.className}>{statusInfo.label}</span>
@@ -167,7 +168,7 @@ const Dashboard = () => {
                   animate={{ opacity: 1, x: 0 }}
                   whileHover={{ scale: 1.02 }}
                   style={{ 
-                    background: 'rgba(255,255,255,0.5)', 
+                    background: 'var(--color-surface-hover)', 
                     padding: '1rem', 
                     borderRadius: 'var(--radius-lg)',
                     border: '1px solid var(--color-border)'

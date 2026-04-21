@@ -37,7 +37,7 @@ const Signup = () => {
 
   return (
     <div className="auth-container" style={{
-      background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)',
+      background: 'var(--color-background)',
     }}>
       <motion.div 
         className="glass-card auth-card"
@@ -70,17 +70,17 @@ const Signup = () => {
             padding: '0.85rem 1.5rem',
             borderRadius: 'var(--radius-lg)',
             border: '1px solid var(--color-border)',
-            background: 'white',
+            background: 'var(--color-surface)',
             cursor: 'pointer',
             fontSize: '0.95rem',
             fontWeight: 600,
             color: 'var(--color-text-main)',
             transition: 'all 0.2s ease',
             marginBottom: '1.5rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
           }}
-          onMouseOver={(e) => { e.currentTarget.style.background = '#f8f9fa'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)'; }}
-          onMouseOut={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)'; }}
+          onMouseOver={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.background = 'var(--color-surface)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)'; }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>

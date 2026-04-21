@@ -78,7 +78,7 @@ const ConditionSetup = () => {
                 placeholder="e.g. TSLA, AAPL" 
                 value={formData.stockSymbol}
                 onChange={handleChange}
-                style={{ background: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}
+                style={{ textTransform: 'uppercase' }}
               />
             </div>
 
@@ -94,7 +94,7 @@ const ConditionSetup = () => {
                     placeholder="0.00" 
                     value={formData.buyPrice}
                     onChange={handleChange}
-                    style={{ width: '100%', paddingLeft: '2.25rem', background: 'rgba(255,255,255,0.7)' }}
+                    style={{ width: '100%', paddingLeft: '2.25rem' }}
                   />
                 </div>
               </div>
@@ -110,7 +110,7 @@ const ConditionSetup = () => {
                     placeholder="5.0" 
                     value={formData.targetProfit}
                     onChange={handleChange}
-                    style={{ width: '100%', paddingLeft: '2.25rem', background: 'rgba(255,255,255,0.7)' }}
+                    style={{ width: '100%', paddingLeft: '2.25rem' }}
                   />
                 </div>
               </div>
@@ -127,7 +127,7 @@ const ConditionSetup = () => {
                   placeholder="e.g. 14" 
                   value={formData.maxDays}
                   onChange={handleChange}
-                  style={{ width: '100%', paddingLeft: '2.25rem', background: 'rgba(255,255,255,0.7)' }}
+                  style={{ width: '100%', paddingLeft: '2.25rem' }}
                 />
               </div>
             </div>
@@ -140,7 +140,7 @@ const ConditionSetup = () => {
         </div>
 
         {/* Feature Explanation Side Panel */}
-        <div style={{ padding: '1.5rem', background: 'rgba(37, 99, 235, 0.05)', borderRadius: 'var(--radius-xl)', border: '1px solid rgba(37, 99, 235, 0.1)', height: 'fit-content' }}>
+        <div style={{ padding: '1.5rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-border)', height: 'fit-content' }}>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Target color="var(--color-primary)" size={20} />
             How Conditions Work

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Trash2, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import api from '../services/api';
+import { formatPrice } from '../utils/currency';
 
 const Watchlist = () => {
   const [watchlist, setWatchlist] = useState([]);
@@ -80,7 +81,7 @@ const Watchlist = () => {
               placeholder="Search symbol (e.g. AAPL, INF)" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: '100%', paddingLeft: '2.5rem', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)' }}
+              style={{ width: '100%', paddingLeft: '2.5rem' }}
             />
           </div>
           <button type="submit" className="btn-primary" style={{ width: 'auto' }} disabled={adding || !searchQuery.trim()}>
@@ -97,7 +98,7 @@ const Watchlist = () => {
       ) : watchlist.length === 0 ? (
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 2rem', background: 'rgba(255,255,255,0.4)', borderRadius: 'var(--radius-xl)', border: '1px dashed var(--color-border)' }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 2rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-xl)', border: '1px dashed var(--color-border)' }}
         >
           <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Your watchlist is empty</h3>
           <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', maxWidth: '400px' }}>
@@ -136,7 +137,7 @@ const Watchlist = () => {
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '1.5rem' }}>
                   <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>
-                    {stock.price != null ? `$${stock.price}` : '—'}
+                    {stock.price != null ? formatPrice(stock.price, stock.symbol) : '—'}
                   </div>
                   {stock.change != null && (
                     <div style={{ 

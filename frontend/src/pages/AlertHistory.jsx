@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Clock, Brain, RefreshCw, BarChart2 } from 'lucide-react';
 import api from '../services/api';
+import { formatPrice } from '../utils/currency';
 
 const AlertHistory = () => {
   const [alerts, setAlerts] = useState([]);
@@ -48,7 +49,7 @@ const AlertHistory = () => {
           <h1>Alert History</h1>
           <p style={{ color: 'var(--color-text-muted)' }}>Historical AI analysis and system notifications.</p>
         </div>
-        <button className="btn-primary" style={{ width: 'auto', background: 'rgba(255,255,255,0.7)', color: 'var(--color-text-main)', border: '1px solid var(--color-border)' }} onClick={fetchAlerts}>
+        <button className="btn-primary" style={{ width: 'auto', background: 'var(--color-surface)', color: 'var(--color-text-main)', border: '1px solid var(--color-border)' }} onClick={fetchAlerts}>
           <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           Refresh
         </button>
@@ -61,7 +62,7 @@ const AlertHistory = () => {
       ) : alerts.length === 0 ? (
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 2rem', background: 'rgba(255,255,255,0.4)', borderRadius: 'var(--radius-xl)', border: '1px dashed var(--color-border)' }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 2rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-xl)', border: '1px dashed var(--color-border)' }}
         >
           <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>All Caught Up!</h3>
           <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', maxWidth: '400px' }}>
@@ -97,7 +98,7 @@ const AlertHistory = () => {
                     <Brain size={18} color="var(--color-primary)" /> AI Reasoning
                   </div>
                   <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                    {alert.aiNote || `Price triggered at $${alert.triggerPrice}. ${alert.profitPercent != null ? `P/L: ${alert.profitPercent > 0 ? '+' : ''}${alert.profitPercent.toFixed(2)}%` : ''}`}
+                    {alert.aiNote || `Price triggered at ${formatPrice(alert.triggerPrice, alert.symbol)}. ${alert.profitPercent != null ? `P/L: ${alert.profitPercent > 0 ? '+' : ''}${alert.profitPercent.toFixed(2)}%` : ''}`}
                   </p>
                 </div>
 
@@ -109,7 +110,7 @@ const AlertHistory = () => {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', background: 'var(--color-background)', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-pill)', border: '1px solid var(--color-border)' }}>
                     <BarChart2 size={14} color="var(--color-primary)" />
-                    Price: <strong style={{ color: 'var(--color-text-main)' }}>${alert.triggerPrice}</strong>
+                    Price: <strong style={{ color: 'var(--color-text-main)' }}>{formatPrice(alert.triggerPrice, alert.symbol)}</strong>
                   </div>
                   {alert.emailSent && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--color-text-light)' }}>

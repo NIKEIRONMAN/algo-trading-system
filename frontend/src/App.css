@@ -1,4 +1,4 @@
-/* App.css */
+/* App.css — Dark Theme */
 #root {
   min-height: 100vh;
   display: flex;
@@ -10,11 +10,11 @@
   min-height: 100vh;
 }
 
+/* ── Sidebar ── */
 .sidebar {
   width: 250px;
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(16px);
-  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   padding: 1.5rem 1rem;
@@ -62,7 +62,7 @@
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--color-surface-hover);
   color: var(--color-primary);
 }
 
@@ -93,7 +93,7 @@
   font-weight: 700;
 }
 
-/* Mobile responsive layout */
+/* ── Mobile Responsive ── */
 @media (max-width: 768px) {
   .sidebar {
     width: 0;
@@ -106,13 +106,14 @@
   }
 }
 
-/* Auth Pages */
+/* ── Auth Pages ── */
 .auth-container {
   display: flex;
   min-height: 100vh;
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  background: var(--color-background);
 }
 
 .auth-card {
@@ -151,9 +152,12 @@
 }
 
 .form-group input {
-  background: rgba(255,255,255,0.8);
+  background: var(--color-surface);
+  color: var(--color-text-main);
+  border-color: var(--color-border);
 }
 
+/* ── Buttons ── */
 .btn-primary {
   background: var(--color-primary);
   color: white;
@@ -174,7 +178,7 @@
   transform: translateY(-1px);
 }
 
-/* Page Headers */
+/* ── Page Headers ── */
 .page-header {
   margin-bottom: 2rem;
   display: flex;
@@ -186,7 +190,7 @@
   font-size: 2rem;
 }
 
-/* Grid Layouts */
+/* ── Grid Layouts ── */
 .grid-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -194,7 +198,7 @@
   margin-bottom: 2rem;
 }
 
-/* UI Badges */
+/* ── Badges ── */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -207,4 +211,22 @@
 
 .badge.buy { background: var(--color-buy-bg); color: var(--color-buy); }
 .badge.sell { background: var(--color-sell-bg); color: var(--color-sell); }
-.badge.hold { background: var(--color-hold-bg); color: #B45309; }
+.badge.hold { background: var(--color-hold-bg); color: #FACC15; }
+
+/* ── Dark Table Rows ── */
+.condition-row,
+.alert-row,
+.watchlist-row {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  transition: all var(--transition-fast);
+}
+
+.condition-row:hover,
+.alert-row:hover,
+.watchlist-row:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
