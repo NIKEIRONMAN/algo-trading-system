@@ -1,28 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Trash2, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
+import { Search, Plus, Trash2, TrendingUp, TrendingDown, RefreshCw, ShoppingCart } from 'lucide-react';
 import api from '../services/api';
 import { formatPrice } from '../utils/currency';
+import StockChart from '../components/StockChart';
 
 const Watchlist = () => {
+  const navigate = useNavigate();
   const [watchlist, setWatchlist] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const prevPricesRef = useRef({});
 
   useEffect(() => {
     fetchWatchlist();
+  }, []);
+
+  // Auto refresh every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchWatchlistSilent();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchWatchlist = async () => {
     setLoading(true);
     try {
       const response = await api.get('/stocks/watchlist/prices');
-      // Backend returns array of price objects; if empty, fetch just watchlist entries
       if (response.data && response.data.length > 0) {
         setWatchlist(response.data);
+        // Store prices for flash comparison
+        const priceMap = {};
+        response.data.forEach((s) => { priceMap[s.symbol] = s.price; });
+        prevPricesRef.current = priceMap;
       } else {
-        // No prices yet, try raw watchlist
         setWatchlist([]);
       }
     } catch (err) {
@@ -30,6 +45,38 @@ const Watchlist = () => {
       setWatchlist([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchWatchlistSilent = async () => {
+    try {
+      const response = await api.get('/stocks/watchlist/prices');
+      if (response.data && response.data.length > 0) {
+        // Compare prices for flash animation
+        const newPriceMap = {};
+        response.data.forEach((s) => { newPriceMap[s.symbol] = s.price; });
+
+        setWatchlist((prev) => {
+          return response.data.map((stock) => {
+            const oldPrice = prevPricesRef.current[stock.symbol];
+            let priceFlash = null;
+            if (oldPrice != null && stock.price != null) {
+              if (stock.price > oldPrice) priceFlash = 'up';
+              else if (stock.price < oldPrice) priceFlash = 'down';
+            }
+            return { ...stock, priceFlash };
+          });
+        });
+
+        prevPricesRef.current = newPriceMap;
+
+        // Clear flash after 1 second
+        setTimeout(() => {
+          setWatchlist((prev) => prev.map((s) => ({ ...s, priceFlash: null })));
+        }, 1200);
+      }
+    } catch (err) {
+      // Silent fail for auto-refresh
     }
   };
 
@@ -44,7 +91,6 @@ const Watchlist = () => {
         companyName: searchQuery.toUpperCase(),
       });
       if (response.data) {
-        // Re-fetch to get updated prices
         await fetchWatchlist();
       }
     } catch (err) {
@@ -70,7 +116,12 @@ const Watchlist = () => {
       <div className="page-header" style={{ alignItems: 'flex-start' }}>
         <div>
           <h1>Watchlist</h1>
-          <p style={{ color: 'var(--color-text-muted)' }}>Track your favorite NSE and NASDAQ stocks.</p>
+          <p style={{ color: 'var(--color-text-muted)' }}>
+            Track your favorite NSE and NASDAQ stocks. 
+            <span style={{ fontSize: '0.75rem', marginLeft: '0.5rem', color: 'var(--color-text-light)' }}>
+              Auto-refreshes every 10s
+            </span>
+          </p>
         </div>
         
         <form onSubmit={handleAddStock} style={{ display: 'flex', gap: '0.5rem', width: '100%', maxWidth: '400px' }}>
@@ -106,56 +157,96 @@ const Watchlist = () => {
           </p>
         </motion.div>
       ) : (
-        <div className="grid-cards" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+        <div className="grid-cards" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}>
           <AnimatePresence>
-            {watchlist.map(stock => (
-              <motion.div
-                key={stock.symbol || stock._id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                className="glass-card"
-                style={{ position: 'relative', overflow: 'hidden' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{stock.symbol}</h3>
+            {watchlist.map(stock => {
+              const flashStyle = stock.priceFlash === 'up'
+                ? { boxShadow: '0 0 20px rgba(0,255,136,0.3)', borderColor: 'rgba(0,255,136,0.5)' }
+                : stock.priceFlash === 'down'
+                  ? { boxShadow: '0 0 20px rgba(255,68,68,0.3)', borderColor: 'rgba(255,68,68,0.5)' }
+                  : {};
+
+              return (
+                <motion.div
+                  key={stock.symbol || stock._id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                  className="glass-card"
+                  style={{ position: 'relative', overflow: 'hidden', transition: 'box-shadow 0.3s, border-color 0.3s', ...flashStyle }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{stock.symbol}</h3>
+                      </div>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{stock.companyName || stock.symbol}</span>
                     </div>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{stock.companyName || stock.symbol}</span>
+                    <button 
+                      onClick={() => handleRemoveStock(stock.symbol)}
+                      style={{ color: 'var(--color-text-light)', padding: '0.4rem', borderRadius: 'var(--radius-md)' }}
+                      onMouseOver={(e) => { e.currentTarget.style.color = 'var(--color-sell)'; e.currentTarget.style.background = 'var(--color-sell-bg)' }}
+                      onMouseOut={(e) => { e.currentTarget.style.color = 'var(--color-text-light)'; e.currentTarget.style.background = 'none' }}
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => handleRemoveStock(stock.symbol)}
-                    style={{ color: 'var(--color-text-light)', padding: '0.4rem', borderRadius: 'var(--radius-md)' }}
-                    onMouseOver={(e) => { e.currentTarget.style.color = 'var(--color-sell)'; e.currentTarget.style.background = 'var(--color-sell-bg)' }}
-                    onMouseOut={(e) => { e.currentTarget.style.color = 'var(--color-text-light)'; e.currentTarget.style.background = 'none' }}
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '1.5rem' }}>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>
-                    {stock.price != null ? formatPrice(stock.price, stock.symbol) : '—'}
+
+                  {/* Mini Sparkline Chart */}
+                  <div style={{ margin: '0.5rem 0' }}>
+                    <StockChart symbol={stock.symbol} mini={true} showHeader={false} />
                   </div>
-                  {stock.change != null && (
-                    <div style={{ 
-                      display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600,
-                      color: stock.change >= 0 ? 'var(--color-buy)' : 'var(--color-sell)',
-                      background: stock.change >= 0 ? 'var(--color-buy-bg)' : 'var(--color-sell-bg)',
-                      padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-md)'
-                    }}>
-                      {stock.change >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                      {stock.change > 0 ? '+' : ''}{stock.change}%
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '0.75rem' }}>
+                    <div>
+                      <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>
+                        {stock.price != null ? formatPrice(stock.price, stock.symbol) : '—'}
+                      </div>
+                      {stock.change != null && (
+                        <div style={{ 
+                          display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600,
+                          color: stock.change >= 0 ? 'var(--color-buy)' : 'var(--color-sell)',
+                          background: stock.change >= 0 ? 'var(--color-buy-bg)' : 'var(--color-sell-bg)',
+                          padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-md)', fontSize: '0.85rem',
+                        }}>
+                          {stock.change >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                          {stock.change > 0 ? '+' : ''}{stock.change}%
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+
+                    {/* BUY Button */}
+                    <button
+                      onClick={() => navigate(`/trade?symbol=${stock.symbol}`)}
+                      style={{
+                        background: '#00FF88', color: '#0F172A', border: 'none',
+                        padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)',
+                        fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '0.3rem',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 10px rgba(0,255,136,0.2)',
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,255,136,0.35)'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,255,136,0.2)'; }}
+                    >
+                      <ShoppingCart size={14} /> BUY
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
       )}
+
+      <style>{`
+        @keyframes animate-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin { animation: animate-spin 1s linear infinite; }
+      `}</style>
     </motion.div>
   );
 };

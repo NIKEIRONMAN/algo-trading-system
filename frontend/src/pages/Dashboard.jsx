@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, AlertCircle, Activity, Brain, Target } from 'lucide-react';
+import { TrendingUp, AlertCircle, Activity, Brain, Target, Wallet, Briefcase } from 'lucide-react';
 import api from '../services/api';
 import { formatPrice, getCurrencySymbol } from '../utils/currency';
 
@@ -9,20 +9,23 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ activeStocks: 0, totalAlerts: 0, profitPercentage: '0%', activeConditions: 0 });
   const [decisions, setDecisions] = useState([]);
   const [conditions, setConditions] = useState([]);
+  const [portfolioData, setPortfolioData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [statsRes, alertsRes, conditionsRes] = await Promise.all([
+        const [statsRes, alertsRes, conditionsRes, portfolioRes] = await Promise.all([
           api.get('/dashboard/stats').catch(() => null),
           api.get('/dashboard/recent-alerts').catch(() => null),
           api.get('/conditions').catch(() => null),
+          api.get('/portfolio').catch(() => null),
         ]);
 
         if (statsRes?.data) setStats(statsRes.data);
         if (alertsRes?.data) setDecisions(alertsRes.data);
         if (conditionsRes?.data) setConditions(conditionsRes.data.slice(0, 10));
+        if (portfolioRes?.data) setPortfolioData(portfolioRes.data);
       } catch (err) {
         console.error('Dashboard data fetch error:', err);
       } finally {
@@ -110,6 +113,56 @@ const Dashboard = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Portfolio Summary Cards */}
+      {portfolioData && (
+        <div className="grid-cards" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          <motion.div variants={itemVariants} className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ background: 'rgba(59,130,246,0.15)', padding: '1rem', borderRadius: 'var(--radius-lg)', color: '#3B82F6' }}>
+              <Wallet size={28} />
+            </div>
+            <div>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Virtual Balance</p>
+              <h2 style={{ fontSize: '1.5rem' }}>{formatPrice(portfolioData.virtualBalance, 'INR.NS')}</h2>
+            </div>
+          </motion.div>
+
+          <motion.div variants={itemVariants} className="glass-card" style={{
+            display: 'flex', alignItems: 'center', gap: '1.5rem',
+            borderColor: (portfolioData.totalProfitLoss || 0) >= 0 ? 'rgba(0,255,136,0.2)' : 'rgba(255,68,68,0.2)',
+          }}>
+            <div style={{
+              background: (portfolioData.totalProfitLoss || 0) >= 0 ? 'var(--color-buy-bg)' : 'var(--color-sell-bg)',
+              padding: '1rem', borderRadius: 'var(--radius-lg)',
+              color: (portfolioData.totalProfitLoss || 0) >= 0 ? '#00FF88' : '#FF4444',
+            }}>
+              {(portfolioData.totalProfitLoss || 0) >= 0 ? <TrendingUp size={28} /> : <TrendingUp size={28} />}
+            </div>
+            <div>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Total P&L</p>
+              <h2 style={{
+                fontSize: '1.5rem',
+                color: (portfolioData.totalProfitLoss || 0) >= 0 ? '#00FF88' : '#FF4444',
+              }}>
+                {(portfolioData.totalProfitLoss || 0) >= 0 ? '+' : ''}{formatPrice(portfolioData.totalProfitLoss, 'INR.NS')}
+                <span style={{ fontSize: '0.8rem', marginLeft: '0.3rem' }}>
+                  ({(portfolioData.totalProfitLossPercent || 0) >= 0 ? '+' : ''}{portfolioData.totalProfitLossPercent?.toFixed(2) || '0.00'}%)
+                </span>
+              </h2>
+            </div>
+          </motion.div>
+
+          <motion.div variants={itemVariants} className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ background: 'rgba(250,204,21,0.12)', padding: '1rem', borderRadius: 'var(--radius-lg)', color: '#FACC15' }}>
+              <Briefcase size={28} />
+            </div>
+            <div>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Open Positions</p>
+              <h2 style={{ fontSize: '1.875rem' }}>{portfolioData.openTrades?.length || 0}</h2>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Conditions Table + AI Insights */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '1.5rem' }}>

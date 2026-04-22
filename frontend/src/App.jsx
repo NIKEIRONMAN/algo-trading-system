@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard';
 import Watchlist from './pages/Watchlist';
 import ConditionSetup from './pages/ConditionSetup';
 import AlertHistory from './pages/AlertHistory';
+import Portfolio from './pages/Portfolio';
+import Trade from './pages/Trade';
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
@@ -77,6 +79,8 @@ function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="watchlist" element={<Watchlist />} />
+          <Route path="portfolio" element={<Portfolio />} />
+          <Route path="trade" element={<Trade />} />
           <Route path="conditions" element={<ConditionSetup />} />
           <Route path="alerts" element={<AlertHistory />} />
         </Route>

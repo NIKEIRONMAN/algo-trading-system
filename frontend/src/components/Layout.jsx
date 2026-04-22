@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Eye, Settings, Bell, LogOut, Activity } from 'lucide-react';
+import { LayoutDashboard, Eye, Settings, Bell, LogOut, Activity, Briefcase, ShoppingCart } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const Layout = () => {
@@ -21,6 +21,8 @@ const Layout = () => {
   const navLinks = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/watchlist', icon: Eye, label: 'Watchlist' },
+    { to: '/portfolio', icon: Briefcase, label: 'Portfolio' },
+    { to: '/trade', icon: ShoppingCart, label: 'Trade' },
     { to: '/conditions', icon: Settings, label: 'Conditions' },
     { to: '/alerts', icon: Bell, label: 'Alert History' },
   ];

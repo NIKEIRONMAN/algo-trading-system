@@ -15,6 +15,9 @@ const stockRoutes = require('./routes/stockRoutes');
 const conditionRoutes = require('./routes/conditionRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const portfolioRoutes = require('./routes/portfolioRoutes');
+const tradeRoutes = require('./routes/tradeRoutes');
+const chartRoutes = require('./routes/chartRoutes');
 
 // Cron job
 const { startPriceMonitor } = require('./jobs/priceMonitor');
@@ -45,6 +48,9 @@ app.use('/api/stocks', stockRoutes);
 app.use('/api/conditions', conditionRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/trades', tradeRoutes);
+app.use('/api/charts', chartRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => res.json({ message: 'Algo Trading Backend is running 🚀' }));
