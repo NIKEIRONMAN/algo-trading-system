@@ -59,59 +59,16 @@ router.get('/:symbol', protect, async (req, res) => {
 
     const timestamps = result.timestamp || [];
     const quotes = result.indicators?.quote?.[0] || {};
-    const currency = result.meta?.currency || 'INR';
 
-    const chartData = [];
+    const chartData = timestamps.map((ts, i) => ({
+      date: new Date(ts * 1000).toLocaleDateString('en-IN'),
+      open: parseFloat(quotes.open[i]?.toFixed(2)),
+      high: parseFloat(quotes.high[i]?.toFixed(2)),
+      low: parseFloat(quotes.low[i]?.toFixed(2)),
+      close: parseFloat(quotes.close[i]?.toFixed(2)),
+    })).filter((d) => !isNaN(d.close));
 
-    for (let i = 0; i < timestamps.length; i++) {
-      const open = quotes.open?.[i];
-      const high = quotes.high?.[i];
-      const low = quotes.low?.[i];
-      const close = quotes.close?.[i];
-
-      // Skip null/invalid entries (holidays, etc.)
-      if (open == null || high == null || low == null || close == null) continue;
-
-      const date = new Date(timestamps[i] * 1000);
-      date.setHours(0, 0, 0, 0);
-
-      chartData.push({
-        date,
-        open: Math.round(open * 100) / 100,
-        high: Math.round(high * 100) / 100,
-        low: Math.round(low * 100) / 100,
-        close: Math.round(close * 100) / 100,
-      });
-    }
-
-    // Save to PriceHistory (upsert to avoid duplicates)
-    for (const point of chartData) {
-      await PriceHistory.findOneAndUpdate(
-        { symbol, date: point.date },
-        {
-          symbol,
-          date: point.date,
-          open: point.open,
-          high: point.high,
-          low: point.low,
-          close: point.close,
-          currency,
-        },
-        { upsert: true }
-      );
-    }
-
-    console.log(`[Charts] Saved ${chartData.length} data points for ${symbol}`);
-
-    res.json(
-      chartData.map((d) => ({
-        date: d.date.toISOString().split('T')[0],
-        open: d.open,
-        high: d.high,
-        low: d.low,
-        close: d.close,
-      }))
-    );
+    res.json(chartData);
   } catch (error) {
     console.error(`[Charts] Error for ${req.params.symbol}:`, error.message);
     res.status(500).json({ message: error.message });

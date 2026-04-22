@@ -127,8 +127,8 @@ const StockChart = ({ symbol, height = 200, mini = false, showHeader = true }) =
               <YAxis
                 tick={{ fill: '#64748B', fontSize: 11 }}
                 axisLine={{ stroke: '#334155' }} tickLine={false}
-                domain={['dataMin - 10', 'dataMax + 10']}
-                tickFormatter={(val) => val.toFixed(0)}
+                domain={['auto', 'auto']}
+                tickFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
               />
               <Tooltip content={<CustomTooltip />} />
             </>
