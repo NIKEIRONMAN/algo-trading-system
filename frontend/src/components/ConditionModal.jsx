@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, Calendar, Target, Clock, Bot, Activity } from 'lucide-react';
+import { X, Trash2, Calendar, Target, Clock, Bot, Activity, CheckCircle2 } from 'lucide-react';
 import { formatPrice } from '../utils/currency';
 
 const getStatusBadge = (status) => {
