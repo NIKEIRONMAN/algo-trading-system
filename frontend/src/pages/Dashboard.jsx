@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, AlertCircle, Activity, Brain, Target, Wallet, Briefcase } from 'lucide-react';
+import { TrendingUp, AlertCircle, Activity, Brain, Target, Wallet, Briefcase, Trash2 } from 'lucide-react';
+import ConditionModal from '../components/ConditionModal';
 import api from '../services/api';
 import { formatPrice, getCurrencySymbol } from '../utils/currency';
 
@@ -11,30 +12,43 @@ const Dashboard = () => {
   const [conditions, setConditions] = useState([]);
   const [portfolioData, setPortfolioData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedCondition, setSelectedCondition] = useState(null);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [statsRes, alertsRes, conditionsRes, portfolioRes] = await Promise.all([
-          api.get('/dashboard/stats').catch(() => null),
-          api.get('/dashboard/recent-alerts').catch(() => null),
-          api.get('/conditions').catch(() => null),
-          api.get('/portfolio').catch(() => null),
-        ]);
-
-        if (statsRes?.data) setStats(statsRes.data);
-        if (alertsRes?.data) setDecisions(alertsRes.data);
-        if (conditionsRes?.data) setConditions(conditionsRes.data.slice(0, 10));
-        if (portfolioRes?.data) setPortfolioData(portfolioRes.data);
-      } catch (err) {
-        console.error('Dashboard data fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const [statsRes, alertsRes, conditionsRes, portfolioRes] = await Promise.all([
+        api.get('/dashboard/stats').catch(() => null),
+        api.get('/dashboard/recent-alerts').catch(() => null),
+        api.get('/conditions').catch(() => null),
+        api.get('/portfolio').catch(() => null),
+      ]);
+
+      if (statsRes?.data) setStats(statsRes.data);
+      if (alertsRes?.data) setDecisions(alertsRes.data);
+      if (conditionsRes?.data) setConditions(conditionsRes.data.slice(0, 10));
+      if (portfolioRes?.data) setPortfolioData(portfolioRes.data);
+    } catch (err) {
+      console.error('Dashboard data fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCondition = async (id, symbol) => {
+    if (window.confirm(`Are you sure you want to delete ${symbol} condition?`)) {
+      try {
+        await api.delete(`/conditions/${id}`);
+        setConditions(conditions.filter(c => c._id !== id));
+      } catch (err) {
+        console.error('Failed to delete condition:', err);
+        alert(err.response?.data?.message || 'Failed to delete condition');
+      }
+    }
+  };
 
   const getActionBadge = (action) => {
     switch (action?.toUpperCase()) {
@@ -182,18 +196,41 @@ const Dashboard = () => {
               {conditions.map((cond) => {
                 const statusInfo = getStatusBadge(cond.status);
                 return (
-                  <div key={cond._id} style={{ 
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '1rem', borderRadius: 'var(--radius-lg)', 
-                    background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)'
-                  }}>
+                  <div 
+                    key={cond._id} 
+                    onClick={() => setSelectedCondition(cond)}
+                    style={{ 
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '1rem', borderRadius: 'var(--radius-lg)', cursor: 'pointer',
+                      background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--color-primary)'}
+                    onMouseOut={(e) => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                  >
                     <div>
                       <span style={{ fontWeight: 700, fontSize: '1.125rem' }}>{cond.symbol}</span>
                       <span style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginLeft: '0.75rem' }}>
                         Buy ≤ {formatPrice(cond.buyPrice, cond.symbol)} · Target +{cond.targetProfitPercent}%
                       </span>
                     </div>
-                    <span className={statusInfo.className}>{statusInfo.label}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <span className={statusInfo.className}>{statusInfo.label}</span>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCondition(cond._id, cond.symbol);
+                        }}
+                        style={{
+                          background: 'none', border: 'none', color: 'var(--color-text-light)',
+                          cursor: 'pointer', padding: '0.3rem', borderRadius: 'var(--radius-md)'
+                        }}
+                        onMouseOver={(e) => { e.currentTarget.style.color = '#FF4444'; e.currentTarget.style.background = 'rgba(255,68,68,0.1)' }}
+                        onMouseOut={(e) => { e.currentTarget.style.color = 'var(--color-text-light)'; e.currentTarget.style.background = 'none' }}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -244,6 +281,14 @@ const Dashboard = () => {
           )}
         </motion.div>
       </div>
+
+      <ConditionModal 
+        condition={selectedCondition} 
+        onClose={() => setSelectedCondition(null)}
+        onDelete={(id) => {
+          setConditions(conditions.filter(c => c._id !== id));
+        }}
+      />
     </motion.div>
   );
 };

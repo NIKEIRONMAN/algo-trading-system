@@ -51,6 +51,8 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
+const { getStockPrice } = require('../services/stockService');
+
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/conditions
 // @desc    Create a new trading condition
@@ -76,6 +78,20 @@ router.post('/', protect, async (req, res) => {
       return res.status(400).json({
         message: 'targetProfitPercent must be a positive number',
       });
+    }
+
+    // ── Smart Price Validation (+/- 20%) ─────────────────────
+    const stockData = await getStockPrice(symbol);
+    if (stockData) {
+      const currentPrice = stockData.price;
+      const minAllowed = currentPrice * 0.80;  // 20% below
+      const maxAllowed = currentPrice * 1.20;  // 20% above
+      
+      if (buyPrice < minAllowed || buyPrice > maxAllowed) {
+        return res.status(400).json({
+          message: `Buy price must be within 20% of current price (₹${currentPrice}). Valid range: ₹${minAllowed.toFixed(2)} — ₹${maxAllowed.toFixed(2)}`
+        });
+      }
     }
 
     // ── Compute the sell target for use in the AI prompt ─────
