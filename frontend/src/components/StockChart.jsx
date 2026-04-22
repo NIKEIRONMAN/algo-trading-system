@@ -6,6 +6,12 @@ import {
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import api from '../services/api';
 
+const formatDate = (timestamp) => {
+  if (!timestamp) return '';
+  const date = new Date(timestamp * 1000);
+  return `${date.getDate()}/${date.getMonth() + 1}`;
+};
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload;
@@ -15,7 +21,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       padding: '0.75rem 1rem', fontSize: '0.8rem', color: '#F1F5F9',
       boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
     }}>
-      <div style={{ fontWeight: 700, marginBottom: '0.4rem', color: '#94A3B8' }}>{label}</div>
+      <div style={{ fontWeight: 700, marginBottom: '0.4rem', color: '#94A3B8' }}>{formatDate(label)}</div>
       {d && (
         <>
           <div>Open: <strong>{d.open?.toFixed(2)}</strong></div>
@@ -122,7 +128,7 @@ const StockChart = ({ symbol, height = 200, mini = false, showHeader = true }) =
               <XAxis
                 dataKey="date" tick={{ fill: '#64748B', fontSize: 11 }}
                 axisLine={{ stroke: '#334155' }} tickLine={false}
-                tickFormatter={(val) => { const d = new Date(val); return `${d.getDate()}/${d.getMonth() + 1}`; }}
+                tickFormatter={formatDate}
               />
               <YAxis
                 tick={{ fill: '#64748B', fontSize: 11 }}

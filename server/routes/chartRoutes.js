@@ -61,7 +61,7 @@ router.get('/:symbol', protect, async (req, res) => {
     const quotes = result.indicators?.quote?.[0] || {};
 
     const chartData = timestamps.map((ts, i) => ({
-      date: new Date(ts * 1000).toLocaleDateString('en-IN'),
+      date: ts,
       open: parseFloat(quotes.open[i]?.toFixed(2)),
       high: parseFloat(quotes.high[i]?.toFixed(2)),
       low: parseFloat(quotes.low[i]?.toFixed(2)),
