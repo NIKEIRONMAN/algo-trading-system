@@ -20,11 +20,19 @@ async function fetchFromYahoo(symbol) {
   if (!result) throw new Error(`No data returned for symbol: ${symbol}`);
 
   const meta = result.meta;
+  const currentPrice = meta.regularMarketPrice || 0;
+  const previousClose = meta.previousClose || currentPrice;
+  const change = currentPrice - previousClose;
+  const percentChange = previousClose > 0 ? (change / previousClose) * 100 : 0;
 
   return {
     symbol: meta.symbol,
-    price: meta.regularMarketPrice,
-    previousClose: meta.previousClose,
+    price: currentPrice,
+    previousClose: previousClose,
+    change,
+    percentChange,
+    volume: meta.regularMarketVolume || 0,
+    marketCap: meta.marketCap || 0,
     currency: meta.currency || 'USD',
     exchange: meta.exchangeName || 'UNKNOWN',
     fetchedAt: new Date(),
@@ -62,6 +70,10 @@ async function getStockPrice(symbol) {
           symbol: cached.symbol,
           price: cached.price,
           previousClose: cached.previousClose,
+          change: cached.change,
+          percentChange: cached.percentChange,
+          volume: cached.volume,
+          marketCap: cached.marketCap,
           currency: cached.currency,
           exchange: cached.exchange,
           fetchedAt: cached.fetchedAt,
@@ -84,6 +96,10 @@ async function getStockPrice(symbol) {
       {
         price: fresh.price,
         previousClose: fresh.previousClose,
+        change: fresh.change,
+        percentChange: fresh.percentChange,
+        volume: fresh.volume,
+        marketCap: fresh.marketCap,
         currency: fresh.currency,
         exchange: fresh.exchange,
         fetchedAt: fresh.fetchedAt,

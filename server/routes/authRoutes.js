@@ -123,7 +123,7 @@ router.get(
   }),
   (req, res) => {
     const token = generateToken(req.user);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5174';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     res.redirect(`${frontendUrl}/oauth/callback?token=${token}`);
   }
 );

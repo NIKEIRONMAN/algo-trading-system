@@ -3,6 +3,8 @@ const cron = require('node-cron');
 const Condition = require('../models/Condition');
 const Alert = require('../models/Alert');
 const User = require('../models/User');
+const Trade = require('../models/Trade');
+const Portfolio = require('../models/Portfolio');
 const { getStockPrice } = require('../services/stockService');
 const { analyzeStock, getMarketSummary } = require('../services/geminiService');
 const { sendSellAlertEmail, sendDropAlertEmail, sendDailySummaryEmail } = require('../services/emailService');
@@ -140,7 +142,7 @@ const startPriceMonitor = () => {
 
               console.log(`[Alert] 💾 SELL alert saved — ${condition.symbol} @ ₹${currentPrice}`);
 
-              // Send SELL email
+              // Send SELL email (with auto-sell context if enabled)
               if (userEmail) {
                 const emailResult = await sendSellAlertEmail({
                   to: userEmail,
@@ -150,13 +152,52 @@ const startPriceMonitor = () => {
                   targetSellPrice: targetSellPrice.toFixed(2),
                   profitPercent,
                   aiNote: aiResult.reason,
+                  autoSell: condition.autoSell || false,
                 });
 
                 alert.emailSent = emailResult.success;
                 alert.sentAt = emailResult.success ? new Date() : null;
                 await alert.save();
 
-                console.log(`[Email] ${emailResult.success ? '✅' : '❌'} SELL email → ${userEmail}`);
+                console.log(`[Email] ${emailResult.success ? '✅' : '❌'} ${condition.autoSell ? 'AUTO SELL' : 'SELL'} email → ${userEmail}`);
+              }
+
+              // Auto sell if enabled
+              if (condition.autoSell) {
+                try {
+                  const openTrade = await Trade.findOne({
+                    user: condition.user._id,
+                    symbol: condition.symbol,
+                    status: 'OPEN',
+                  });
+
+                  if (openTrade) {
+                    const sellAmount = openTrade.quantity * currentPrice;
+                    const profitLoss = sellAmount - openTrade.totalAmount;
+                    const profitLossPercent =
+                      (profitLoss / openTrade.totalAmount) * 100;
+
+                    await Trade.findByIdAndUpdate(openTrade._id, {
+                      status: 'CLOSED',
+                      closedAt: new Date(),
+                      profitLoss: parseFloat(profitLoss.toFixed(2)),
+                      profitLossPercent: parseFloat(profitLossPercent.toFixed(2)),
+                    });
+
+                    await Portfolio.findOneAndUpdate(
+                      { user: condition.user._id },
+                      { $inc: { virtualBalance: sellAmount } },
+                      { returnDocument: 'after' }
+                    );
+
+                    console.log(`[AutoSell] ✅ ${condition.symbol} auto sold!`);
+                    console.log(`[AutoSell] P&L: ₹${profitLoss.toFixed(2)} (${profitLossPercent.toFixed(2)}%)`);
+                  } else {
+                    console.log(`[AutoSell] ⚠️ No open trade found for ${condition.symbol}`);
+                  }
+                } catch (err) {
+                  console.error('[AutoSell] Error:', err.message);
+                }
               }
 
               console.log(`[Monitor] ✅ ${condition.symbol}: COMPLETED — Profit: ${profitPercent}%`);

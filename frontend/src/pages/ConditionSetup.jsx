@@ -13,6 +13,8 @@ const ConditionSetup = () => {
     maxDays: ''
   });
   
+  const [autoSell, setAutoSell] = useState(false);
+  
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
@@ -95,15 +97,16 @@ const ConditionSetup = () => {
     setSuccess(false);
     
     try {
-      // Map frontend field names to backend expected fields
       await api.post('/conditions', {
         symbol: formData.stockSymbol,
         buyPrice: parseFloat(formData.buyPrice),
         targetProfitPercent: parseFloat(formData.targetProfit),
         maxDays: parseInt(formData.maxDays),
+        autoSell,
       });
       setSuccess(true);
       setFormData({ stockSymbol: '', buyPrice: '', targetProfit: '', maxDays: '' });
+      setAutoSell(false);
       fetchConditions();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save condition. Please try again.');
@@ -251,6 +254,68 @@ const ConditionSetup = () => {
               </div>
             </div>
 
+            {/* Auto Sell Toggle */}
+            <div style={{
+              marginTop: '0.25rem', padding: '1rem 1.25rem',
+              borderRadius: 'var(--radius-lg)',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)'
+            }}>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '0.75rem', fontWeight: 600 }}>
+                On Target Hit:
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="sellType"
+                    checked={!autoSell}
+                    onChange={() => setAutoSell(false)}
+                    style={{ width: '16px', height: '16px', accentColor: '#3B82F6' }}
+                  />
+                  <div>
+                    <p style={{ color: '#fff', fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>
+                      📧 Send Email Alert Only
+                    </p>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', margin: '0.15rem 0 0' }}>
+                      You will manually sell from Portfolio
+                    </p>
+                  </div>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="sellType"
+                    checked={autoSell}
+                    onChange={() => setAutoSell(true)}
+                    style={{ width: '16px', height: '16px', accentColor: '#22c55e' }}
+                  />
+                  <div>
+                    <p style={{ color: '#fff', fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>
+                      ⚡ Auto Sell + Send Email
+                    </p>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', margin: '0.15rem 0 0' }}>
+                      AI will automatically sell when target hits
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {autoSell && (
+                <div style={{
+                  marginTop: '0.75rem', padding: '0.6rem 0.75rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'rgba(245, 158, 11, 0.1)',
+                  border: '1px solid rgba(245, 158, 11, 0.3)'
+                }}>
+                  <p style={{ color: '#f59e0b', fontSize: '0.75rem', margin: 0 }}>
+                    ⚠️ System will automatically close your position when target is reached
+                  </p>
+                </div>
+              )}
+            </div>
+
             <button type="submit" className="btn-primary" disabled={loading || validationMsg !== null} style={{ marginTop: '1rem' }}>
               {loading ? <Loader className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
               {loading ? 'Saving Condition...' : 'Save & Start AI Monitoring'}
@@ -339,6 +404,23 @@ const ConditionSetup = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <span style={{ fontWeight: 800, fontSize: '1.25rem' }}>{cond.symbol}</span>
                       <span className={statusInfo.className}>{statusInfo.label}</span>
+                      {cond.autoSell ? (
+                        <span style={{
+                          fontSize: '0.7rem', padding: '0.15rem 0.5rem',
+                          borderRadius: '9999px',
+                          background: 'rgba(34,197,94,0.15)',
+                          color: '#4ade80',
+                          border: '1px solid rgba(34,197,94,0.3)'
+                        }}>⚡ Auto Sell</span>
+                      ) : (
+                        <span style={{
+                          fontSize: '0.7rem', padding: '0.15rem 0.5rem',
+                          borderRadius: '9999px',
+                          background: 'rgba(59,130,246,0.15)',
+                          color: '#60a5fa',
+                          border: '1px solid rgba(59,130,246,0.3)'
+                        }}>📧 Alert Only</span>
+                      )}
                     </div>
                     <span style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
                       Buy ≤ <strong style={{ color: '#fff' }}>{formatPrice(cond.buyPrice, cond.symbol)}</strong> 

@@ -34,7 +34,7 @@ router.get('/:symbol', protect, async (req, res) => {
         console.log(`[Charts] Cache HIT → ${symbol} (${existingData.length} points)`);
         return res.json(
           existingData.map((d) => ({
-            date: d.date.toISOString().split('T')[0],
+            date: Math.floor(new Date(d.date).getTime() / 1000),
             open: d.open,
             high: d.high,
             low: d.low,

@@ -173,6 +173,13 @@ const ConditionModal = ({ condition, onClose, onDelete }) => {
                   {condition.lastCheckedPrice ? formatPrice(condition.lastCheckedPrice, condition.symbol) : '—'}
                 </span>
               </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-border)' }}>
+                <span style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>Sell Type</span>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: condition.autoSell ? '#4ade80' : '#60a5fa' }}>
+                  {condition.autoSell ? '⚡ Auto Sell Enabled' : '📧 Alert Only'}
+                </span>
+              </div>
             </div>
 
             {/* AI Note */}

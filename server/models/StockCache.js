@@ -44,6 +44,22 @@ const stockCacheSchema = new mongoose.Schema(
       type: Number,
     },
 
+    change: {
+      type: Number,
+    },
+
+    percentChange: {
+      type: Number,
+    },
+
+    volume: {
+      type: Number,
+    },
+
+    marketCap: {
+      type: Number,
+    },
+
     currency: {
       type: String,
     },

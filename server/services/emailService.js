@@ -17,20 +17,34 @@ transporter.verify()
 // ═══════════════════════════════════════════
 // SELL Alert Email
 // ═══════════════════════════════════════════
-const sendSellAlertEmail = async ({ to, symbol, buyPrice, currentPrice, targetSellPrice, profitPercent, aiNote }) => {
+const sendSellAlertEmail = async ({ to, symbol, buyPrice, currentPrice, targetSellPrice, profitPercent, aiNote, autoSell = false }) => {
   try {
+    const emailSubject = autoSell
+      ? `⚡ AUTO SOLD: ${symbol} — Target Reached! (+${profitPercent}%)`
+      : `🚀 SELL ALERT: ${symbol} — Target Reached! (+${profitPercent}%)`;
+
+    const headerTitle = autoSell ? '⚡ AUTO SOLD' : '🚀 SELL ALERT';
+
+    const autoSellRow = autoSell ? `
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Action Taken</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #22c55e; font-weight: bold;">✅ Automatically Sold by AI</td>
+              </tr>
+    ` : '';
+
     const mailOptions = {
       from: `"Algo Trading Bot 🤖" <${process.env.EMAIL_USER}>`,
       to,
-      subject: `🚀 SELL ALERT: ${symbol} — Target Reached! (+${profitPercent}%)`,
+      subject: emailSubject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 2px solid #22c55e; border-radius: 12px; overflow: hidden;">
-          <div style="background: linear-gradient(135deg, #22c55e, #16a34a); padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">🚀 SELL ALERT</h1>
-            <p style="color: #dcfce7; margin: 5px 0 0; font-size: 18px;">${symbol}</p>
+          <div style="background: linear-gradient(135deg, ${autoSell ? '#f59e0b, #d97706' : '#22c55e, #16a34a'}); padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0;">${headerTitle}</h1>
+            <p style="color: ${autoSell ? '#fef3c7' : '#dcfce7'}; margin: 5px 0 0; font-size: 18px;">${symbol}</p>
           </div>
           <div style="padding: 25px;">
             <table style="width: 100%; border-collapse: collapse;">
+              ${autoSellRow}
               <tr>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Buy Price</td>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">₹${buyPrice}</td>
@@ -61,7 +75,7 @@ const sendSellAlertEmail = async ({ to, symbol, buyPrice, currentPrice, targetSe
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[Email] ✅ SELL email sent → ${to} for ${symbol}`);
+    console.log(`[Email] ✅ ${autoSell ? 'AUTO SELL' : 'SELL'} email sent → ${to} for ${symbol}`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error(`[Email] ❌ SELL email failed:`, error.message);

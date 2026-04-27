@@ -61,7 +61,7 @@ const { getStockPrice } = require('../services/stockService');
 // ─────────────────────────────────────────────────────────────
 router.post('/', protect, async (req, res) => {
   try {
-    const { symbol, buyPrice, targetProfitPercent, maxDays } = req.body;
+    const { symbol, buyPrice, targetProfitPercent, maxDays, autoSell } = req.body;
 
     // ── Validate required fields ─────────────────────────────
     if (!symbol || buyPrice == null || targetProfitPercent == null) {
@@ -106,6 +106,7 @@ router.post('/', protect, async (req, res) => {
       buyPrice,
       targetProfitPercent,
       maxDays: maxDays || 30,
+      autoSell: autoSell || false,
       status: 'PENDING',
     });
 

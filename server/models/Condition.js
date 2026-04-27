@@ -91,6 +91,12 @@ const conditionSchema = new mongoose.Schema(
       default: false,
     },
 
+    // ── Auto Sell Toggle ─────────────────────────────────────
+    autoSell: {
+      type: Boolean,  // if true, auto-close trade when target is hit
+      default: false,
+    },
+
     // ── AI Analysis ───────────────────────────────────────────
     aiNote: {
       type: String, // Gemini AI commentary on the strategy
