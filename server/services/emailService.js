@@ -19,6 +19,9 @@ transporter.verify()
 // ═══════════════════════════════════════════
 const sendSellAlertEmail = async ({ to, symbol, buyPrice, currentPrice, targetSellPrice, profitPercent, aiNote, autoSell = false }) => {
   try {
+    console.log(`[Email] Attempting SELL email to: ${to}`);
+    console.log(`[Email] Using account: ${process.env.EMAIL_USER}`);
+    console.log(`[Email] AutoSell mode: ${autoSell}`);
     const emailSubject = autoSell
       ? `⚡ AUTO SOLD: ${symbol} — Target Reached! (+${profitPercent}%)`
       : `🚀 SELL ALERT: ${symbol} — Target Reached! (+${profitPercent}%)`;

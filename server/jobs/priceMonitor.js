@@ -143,7 +143,11 @@ const startPriceMonitor = () => {
               console.log(`[Alert] 💾 SELL alert saved — ${condition.symbol} @ ₹${currentPrice}`);
 
               // Send SELL email (with auto-sell context if enabled)
+              console.log(`[Debug] condition.autoSell: ${condition.autoSell}`);
+              console.log(`[Debug] userEmail: ${userEmail}`);
               if (userEmail) {
+                console.log(`[Email] Attempting to send to: ${userEmail}`);
+                console.log(`[Email] Using account: ${process.env.EMAIL_USER}`);
                 const emailResult = await sendSellAlertEmail({
                   to: userEmail,
                   symbol: condition.symbol,
@@ -163,6 +167,8 @@ const startPriceMonitor = () => {
               }
 
               // Auto sell if enabled
+              console.log(`[AutoSell] condition.autoSell: ${condition.autoSell}`);
+              console.log(`[AutoSell] Looking for open trade: ${condition.symbol}`);
               if (condition.autoSell) {
                 try {
                   const openTrade = await Trade.findOne({
@@ -170,6 +176,7 @@ const startPriceMonitor = () => {
                     symbol: condition.symbol,
                     status: 'OPEN',
                   });
+                  console.log(`[AutoSell] Open trade found: ${openTrade ? 'YES — ID: ' + openTrade._id : 'NO'}`);
 
                   if (openTrade) {
                     const sellAmount = openTrade.quantity * currentPrice;
@@ -275,7 +282,7 @@ const startPriceMonitor = () => {
     }
   });
 
-  console.log('[Monitor] 🚀 Price monitor started — running every 2 minutes.');
+  console.log('[Monitor] 🚀 Price monitor started — running every 2 minutes (testing mode).');
 
   // ═══════════════════════════════════════════
   // DAILY SUMMARY — 8:00 AM every day
