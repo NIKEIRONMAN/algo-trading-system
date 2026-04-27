@@ -29,9 +29,9 @@ router.get('/:symbol', protect, async (req, res) => {
       const latestDate = new Date(existingData[existingData.length - 1].date);
       const ageHours = (Date.now() - latestDate.getTime()) / (1000 * 60 * 60);
 
-      // If latest data is less than 24 hours old, use cache
-      if (ageHours < 24) {
-        console.log(`[Charts] Cache HIT → ${symbol} (${existingData.length} points)`);
+      // 48 hours to account for weekends (Sat/Sun markets closed)
+      if (ageHours < 48) {
+        console.log(`[Charts] Cache HIT → ${symbol} (${existingData.length} points, age: ${Math.round(ageHours)}h)`);
         return res.json(
           existingData.map((d) => ({
             date: Math.floor(new Date(d.date).getTime() / 1000),
@@ -67,6 +67,29 @@ router.get('/:symbol', protect, async (req, res) => {
       low: parseFloat(quotes.low[i]?.toFixed(2)),
       close: parseFloat(quotes.close[i]?.toFixed(2)),
     })).filter((d) => !isNaN(d.close));
+
+    // Save fresh data to DB for caching
+    try {
+      // Delete old data for this symbol first
+      await PriceHistory.deleteMany({ symbol });
+
+      // Insert fresh data points
+      const priceHistoryDocs = chartData.map((d) => ({
+        symbol,
+        date: new Date(d.date * 1000),
+        open: d.open,
+        high: d.high,
+        low: d.low,
+        close: d.close,
+      }));
+
+      if (priceHistoryDocs.length > 0) {
+        await PriceHistory.insertMany(priceHistoryDocs);
+        console.log(`[Charts] Saved ${priceHistoryDocs.length} data points for ${symbol}`);
+      }
+    } catch (saveErr) {
+      console.error(`[Charts] Failed to save cache for ${symbol}:`, saveErr.message);
+    }
 
     res.json(chartData);
   } catch (error) {

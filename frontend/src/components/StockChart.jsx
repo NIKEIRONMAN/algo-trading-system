@@ -12,9 +12,11 @@ const formatDate = (timestamp) => {
   return `${date.getDate()}/${date.getMonth() + 1}`;
 };
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, symbol }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload;
+  const currencySymbol = symbol?.endsWith('.NS') ? '₹' : '$';
+  const locale = symbol?.endsWith('.NS') ? 'en-IN' : 'en-US';
   return (
     <div style={{
       background: '#1E293B', border: '1px solid #334155', borderRadius: '0.75rem',
@@ -24,10 +26,10 @@ const CustomTooltip = ({ active, payload, label }) => {
       <div style={{ fontWeight: 700, marginBottom: '0.4rem', color: '#94A3B8' }}>{formatDate(label)}</div>
       {d && (
         <>
-          <div>Open: <strong>{d.open?.toFixed(2)}</strong></div>
-          <div>High: <strong style={{ color: '#00FF88' }}>{d.high?.toFixed(2)}</strong></div>
-          <div>Low: <strong style={{ color: '#FF4444' }}>{d.low?.toFixed(2)}</strong></div>
-          <div>Close: <strong>{d.close?.toFixed(2)}</strong></div>
+          <div>Open: <strong>{currencySymbol}{d.open?.toLocaleString(locale, {minimumFractionDigits: 2})}</strong></div>
+          <div>High: <strong style={{ color: '#00FF88' }}>{currencySymbol}{d.high?.toLocaleString(locale, {minimumFractionDigits: 2})}</strong></div>
+          <div>Low: <strong style={{ color: '#FF4444' }}>{currencySymbol}{d.low?.toLocaleString(locale, {minimumFractionDigits: 2})}</strong></div>
+          <div>Close: <strong>{currencySymbol}{d.close?.toLocaleString(locale, {minimumFractionDigits: 2})}</strong></div>
         </>
       )}
     </div>
@@ -92,6 +94,9 @@ const StockChart = ({ symbol, height = 200, mini = false, showHeader = true }) =
   const isPositive = changePercent >= 0;
   const lineColor = isPositive ? '#00FF88' : '#FF4444';
   const gradientId = `chartGradient_${symbol?.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  
+  const currencySymbol = symbol?.endsWith('.NS') ? '₹' : '$';
+  const locale = symbol?.endsWith('.NS') ? 'en-IN' : 'en-US';
 
   return (
     <div>
@@ -134,9 +139,9 @@ const StockChart = ({ symbol, height = 200, mini = false, showHeader = true }) =
                 tick={{ fill: '#64748B', fontSize: 11 }}
                 axisLine={{ stroke: '#334155' }} tickLine={false}
                 domain={['auto', 'auto']}
-                tickFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
+                tickFormatter={(value) => `${currencySymbol}${value.toLocaleString(locale)}`}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip symbol={symbol} />} />
             </>
           )}
 
