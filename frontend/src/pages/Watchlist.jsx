@@ -203,15 +203,15 @@ const Watchlist = () => {
                       <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>
                         {stock.price != null ? formatPrice(stock.price, stock.symbol) : '—'}
                       </div>
-                      {stock.change != null && (
+                      {stock.percentChange != null && (
                         <div style={{ 
                           display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600,
-                          color: stock.change >= 0 ? 'var(--color-buy)' : 'var(--color-sell)',
-                          background: stock.change >= 0 ? 'var(--color-buy-bg)' : 'var(--color-sell-bg)',
+                          color: stock.percentChange >= 0 ? 'var(--color-buy)' : 'var(--color-sell)',
+                          background: stock.percentChange >= 0 ? 'var(--color-buy-bg)' : 'var(--color-sell-bg)',
                           padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-md)', fontSize: '0.85rem',
                         }}>
-                          {stock.change >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                          {stock.change > 0 ? '+' : ''}{parseFloat(stock.change).toFixed(2)}%
+                          {stock.percentChange >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                          {stock.percentChange > 0 ? '+' : ''}{parseFloat(stock.percentChange).toFixed(2)}%
                         </div>
                       )}
                     </div>
