@@ -211,7 +211,7 @@ const Watchlist = () => {
                           padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-md)', fontSize: '0.85rem',
                         }}>
                           {stock.change >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                          {stock.change > 0 ? '+' : ''}{stock.change}%
+                          {stock.change > 0 ? '+' : ''}{parseFloat(stock.change).toFixed(2)}%
                         </div>
                       )}
                     </div>
