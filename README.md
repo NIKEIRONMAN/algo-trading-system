@@ -16,8 +16,8 @@
 </p>
 
 <p align="center">
-  <a href="https://algo-trading-system-pi.vercel.app/" target="_blank">
-    <img src="https://img.shields.io/badge/🚀 Live Demo-algo--trading--system--pi.vercel.app-brightgreen?style=for-the-badge" />
+  <a href="https://algo-ai-trade.vercel.app/" target="_blank">
+    <img src="https://img.shields.io/badge/🚀 Live Demo-algo--ai--trade.vercel.app-brightgreen?style=for-the-badge" />
   </a>
 </p>
 
@@ -52,7 +52,7 @@ The **AI-Powered Algorithmic Trading System** is a real-time paper trading simul
 
 ## 🚀 Live Demo
 
-🔗 **[https://algo-trading-system-pi.vercel.app/](https://algo-trading-system-pi.vercel.app/)**
+🔗 **[https://algo-ai-trade.vercel.app/](https://algo-ai-trade.vercel.app/)**
 
 - Frontend deployed on **Vercel**
 - Backend deployed on **Render** (with keep-alive ping to prevent cold starts)
@@ -484,6 +484,6 @@ Built as a Mini Project for B.Tech — AI/ML Engineering.
 
 **⭐ If you found this project useful, give it a star!**
 
-[![Live Demo](https://img.shields.io/badge/🔗_Live_Demo-algo--trading--system--pi.vercel.app-blue?style=for-the-badge)](https://algo-trading-system-pi.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/🔗_Live_Demo-algo--ai--trade.vercel.app-blue?style=for-the-badge)](https://algo-ai-trade.vercel.app/)
 
 </div>
