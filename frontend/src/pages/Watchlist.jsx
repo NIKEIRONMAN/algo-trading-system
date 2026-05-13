@@ -113,30 +113,30 @@ const Watchlist = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <div className="page-header" style={{ alignItems: 'flex-start' }}>
+      <div className="page-header">
         <div>
           <h1>Watchlist</h1>
-          <p style={{ color: 'var(--color-text-muted)' }}>
-            Track your favorite NSE and NASDAQ stocks. 
+          <p>
+            Track NSE &amp; NASDAQ stocks.
             <span style={{ fontSize: '0.75rem', marginLeft: '0.5rem', color: 'var(--color-text-light)' }}>
               Auto-refreshes every 10s
             </span>
           </p>
         </div>
-        
-        <form onSubmit={handleAddStock} style={{ display: 'flex', gap: '0.5rem', width: '100%', maxWidth: '400px' }}>
+
+        <form onSubmit={handleAddStock} style={{ display: 'flex', gap: '0.5rem', width: '100%', maxWidth: '380px' }}>
           <div style={{ position: 'relative', flex: 1 }}>
-            <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-light)' }} />
-            <input 
-              type="text" 
-              placeholder="Search symbol (e.g. AAPL, INF)" 
+            <Search size={16} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-light)', pointerEvents: 'none' }} />
+            <input
+              type="text"
+              placeholder="Symbol (e.g. AAPL, TCS.NS)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ width: '100%', paddingLeft: '2.5rem' }}
             />
           </div>
-          <button type="submit" className="btn-primary" style={{ width: 'auto' }} disabled={adding || !searchQuery.trim()}>
-            {adding ? <RefreshCw size={18} className="animate-spin" /> : <Plus size={18} />}
+          <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0.625rem 1.125rem' }} disabled={adding || !searchQuery.trim()}>
+            {adding ? <RefreshCw size={16} className="animate-spin" /> : <Plus size={16} />}
             <span>Add</span>
           </button>
         </form>
@@ -157,7 +157,7 @@ const Watchlist = () => {
           </p>
         </motion.div>
       ) : (
-        <div className="grid-cards" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}>
+        <div className="watchlist-grid">
           <AnimatePresence>
             {watchlist.map(stock => {
               const flashStyle = stock.priceFlash === 'up'
@@ -240,13 +240,7 @@ const Watchlist = () => {
         </div>
       )}
 
-      <style>{`
-        @keyframes animate-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin { animation: animate-spin 1s linear infinite; }
-      `}</style>
+
     </motion.div>
   );
 };
