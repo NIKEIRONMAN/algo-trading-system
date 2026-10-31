@@ -15,7 +15,7 @@ function extractJSON(text) {
 // ── Groq se decision lo ───────────────────────────────────────
 async function analyzeWithGroq(symbol, buyPrice, currentPrice, targetProfitPercent, maxDays, targetSellPrice, profitPercent) {
   const completion = await groq.chat.completions.create({
-    model: 'llama-3.1-8b-instant',
+    model: 'openai/gpt-oss-20b',
     messages: [{
       role: 'user',
       content: `You are an expert stock trading analyst. Make a SELL or HOLD decision.
@@ -48,7 +48,9 @@ async function analyzeWithGroq(symbol, buyPrice, currentPrice, targetProfitPerce
 
 // ── Gemini se decision lo ─────────────────────────────────────
 async function analyzeWithGemini(symbol, buyPrice, currentPrice, targetProfitPercent, maxDays, targetSellPrice, profitPercent) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
+  const model = genAI.getGenerativeModel({
+  model: 'gemini-3.1-flash-lite'
+});
 
   const prompt = `You are an expert stock trading analyst. Make a SELL or HOLD decision.
 
@@ -126,7 +128,9 @@ async function getMarketSummary(symbol, currentPrice) {
 
   // Try Gemini fallback
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const model = genAI.getGenerativeModel({
+  model: 'gemini-3.1-flash-lite'
+});
     const result = await model.generateContent(prompt);
     return result.response.text();
   } catch (_) { }
